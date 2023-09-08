@@ -81,11 +81,16 @@ namespace projectMtuci.Controllers
 
         public IActionResult Basket(string userName)
         {
+            var result = new List<Subject>();
             //null check
+            if (_basketService.GetBasketItems().Result.Data == null)
+            {
+                return View(result);
+            }
             var basketItems = _basketService.GetBasketItems().Result.Data.Where(x => x.UserName.Trim() == userName.Trim());
             var subjects = _subjectService.GetSubjects().Result.Data;
             var ids = new List<int>();
-            var result = new List<Subject>();
+            
 
             if (subjects == null)
             {
@@ -109,12 +114,11 @@ namespace projectMtuci.Controllers
 
         public IActionResult DeleteFromBasket(int id)
         {
-            var basketItem = _basketService.GetBasketItems().Result.Data.Where(x => x.SubjectId == id);
-            var basketItemId = basketItem.FirstOrDefault().Id;
+            var basketItem = _basketService.GetBasketItems().Result.Data.Where(x => x.SubjectId == id).Where(x => x.UserName.Trim() == User.Identity.Name.Trim());
 
-            _basketService.DeleteBasketItem(basketItemId);
+            _basketService.DeleteBasketItem(basketItem.First().Id);
 
-            return RedirectToRoute("default", new { controller = "Subject", action = "Basket", userName = "daniil1" });
+            return RedirectToRoute("default", new { controller = "Subject", action = "Basket", userName = User.Identity.Name });
         }
 
         public FileContentResult DownloadSubject(string path)
